@@ -145,6 +145,22 @@ def test_checkpoint_survives_new_process(owner):
     assert result.returncode == 0, result.stderr
     assert "durable-checkpoint-ok" in result.stdout
 
+def test_approved_job_recovers_and_executes_in_fresh_process(owner):
+    run = start(owner)
+    with SessionLocal() as db:
+        approval = db.get(Approval, run["approval"]["id"])
+        approval.status, approval.decided_by = "approved", "user-owner"
+        db.get(Run, run["id"]).status = "queued"
+        db.commit()
+    code = "from app.agent import recover_jobs; recover_jobs()"
+    result = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True, timeout=30)
+    assert result.returncode == 0, result.stderr
+    recovered = owner.get(f"/api/runs/{run['id']}").json()
+    assert recovered["status"] == "completed", recovered
+    with SessionLocal() as db:
+        assert db.get(Order, "order-1").payment_status == "refunded"
+        assert db.scalar(select(func.count()).select_from(Action)) == 1
+
 def test_health(client):
     assert client.get("/api/health").json()["agent_mode"] == "demo"
 
@@ -189,3 +205,47 @@ def test_login_throttle(client):
     for _ in range(20):
         assert client.post("/api/auth/login", json={"email": "nobody@invalid.demo", "password": "bad"}).status_code == 401
     assert client.post("/api/auth/login", json={"email": "nobody@invalid.demo", "password": "bad"}).status_code == 429
+
+def test_mocked_llm_cannot_override_backend_policy(owner, monkeypatch):
+    import app.agent as agent
+    import langchain.agents
+    import langchain_openai
+    captured = {}
+    class FakeAgent:
+        def invoke(self, *args, **kwargs):
+            return {"structured_response": agent.AgentRecommendation(action="refund", reason="Injected model wants to bypass the time window", reply="Please refund anyway."), "messages": []}
+    def fake_create(**kwargs):
+        captured.update(kwargs)
+        return FakeAgent()
+    monkeypatch.setattr(agent, "AGENT_MODE", "llm")
+    monkeypatch.setattr(langchain_openai, "ChatOpenAI", lambda **kwargs: object())
+    monkeypatch.setattr(langchain.agents, "create_agent", fake_create)
+    run = start(owner, "ticket-5")
+    assert run["proposal"]["action"] == "escalate"
+    assert "blocked" in run["proposal"]["reason"]
+    tools = {tool.name: tool for tool in captured["tools"]}
+    order = tools["lookup_customer_order"].invoke({})
+    assert order["reference"] == "ORB-1001"
+    assert "org_id" not in tools["search_knowledge"].args
+    sources = tools["search_knowledge"].invoke({"search_query": "private Northstar policy"})
+    assert all(s["id"] != "doc-north" for s in sources)
+
+def test_live_adapter_compiles_without_provider_call():
+    from langchain.agents import create_agent
+    from langchain_openai import ChatOpenAI
+    from app.agent import AgentRecommendation
+    compiled = create_agent(model=ChatOpenAI(model="gpt-4.1-mini", api_key="test-placeholder-not-a-key", timeout=1, max_retries=0), tools=[], response_format=AgentRecommendation)
+    assert callable(compiled.invoke)
+
+def test_s3_archive_uses_private_tenant_key_and_encryption(monkeypatch):
+    import boto3
+    from botocore.stub import Stubber
+    from app.storage import archive_document
+    client = boto3.client("s3", region_name="ap-south-1", aws_access_key_id="test-placeholder", aws_secret_access_key="test-placeholder")
+    stub = Stubber(client)
+    stub.add_response("put_object", {"ETag": '"test"'}, {"Bucket": "test-bucket", "Key": "org-test/doc-test.txt", "Body": b"Policy\n\nSource content", "ContentType": "text/plain; charset=utf-8", "ServerSideEncryption": "AES256"})
+    monkeypatch.setenv("DOCUMENT_BUCKET", "test-bucket")
+    monkeypatch.setattr(boto3, "client", lambda *args, **kwargs: client)
+    with stub:
+        archive_document("org-test", "doc-test", "Policy", "Source content")
+        stub.assert_no_pending_responses()

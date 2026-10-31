@@ -233,7 +233,7 @@ resource "aws_ecs_task_definition" "app" {
   cpu                      = "256"
   memory                   = "512"
   execution_role_arn       = aws_iam_role.execution.arn
-  task_role_arn            = aws_iam_role.task.arn
+  task_role_arn            = each.key == "api" ? aws_iam_role.task.arn : null
   container_definitions = jsonencode([{
     name      = each.key
     image     = "${aws_ecr_repository.app[each.key].repository_url}:${var.image_tag}"

@@ -1,0 +1,7 @@
+{
+  "suite": "deterministic-demo-regressions",
+  "total": 86,
+  "passed": 86,
+  "failed": [],
+  "note": "Checks demo classification and backend refund rules; does not measure LLM or retrieval quality."
+}

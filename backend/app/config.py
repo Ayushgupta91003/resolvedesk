@@ -4,7 +4,7 @@ from pathlib import Path
 
 DATA_DIR = Path(os.getenv("DATA_DIR", "./data"))
 DATA_DIR.mkdir(parents=True, exist_ok=True)
-DATABASE_URL = os.getenv("DATABASE_URL", f"sqlite:///{DATA_DIR / 'resolvedesk.db'}")
+DATABASE_URL = os.getenv("DATABASE_URL", f"sqlite:///{(DATA_DIR / 'resolvedesk.db').as_posix()}")
 CHECKPOINT_URL = os.getenv("CHECKPOINT_URL", "")
 APP_ENV = os.getenv("APP_ENV", "development")
 SEED_DEMO = os.getenv("SEED_DEMO", "true").lower() == "true"

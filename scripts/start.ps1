@@ -19,7 +19,7 @@ $apiArgs = @('-m', 'uvicorn', 'app.main:app', '--host', '127.0.0.1', '--port', '
 if (Test-Path -LiteralPath (Join-Path $backendRoot '.env')) { $apiArgs += @('--env-file', '.env') }
 $apiProcess = Start-Process -FilePath $projectPython -ArgumentList $apiArgs -WorkingDirectory $backendRoot -WindowStyle Hidden -PassThru -RedirectStandardOutput (Join-Path $runtimeRoot 'api.out.log') -RedirectStandardError (Join-Path $runtimeRoot 'api.err.log')
 $webProcess = Start-Process -FilePath (Get-Command node).Source -ArgumentList @('node_modules/next/dist/bin/next', 'dev', '--hostname', '127.0.0.1', '--port', '3000') -WorkingDirectory $frontendRoot -WindowStyle Hidden -PassThru -RedirectStandardOutput (Join-Path $runtimeRoot 'web.out.log') -RedirectStandardError (Join-Path $runtimeRoot 'web.err.log')
-@{ api = $apiProcess.Id; web = $webProcess.Id; root = $projectRoot } | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $runtimeRoot 'processes.json')
+@{ api = $apiProcess.Id; web = $webProcess.Id; api_started = $apiProcess.StartTime.ToUniversalTime().ToString('o'); web_started = $webProcess.StartTime.ToUniversalTime().ToString('o'); root = $projectRoot } | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $runtimeRoot 'processes.json')
 Write-Host 'ResolveDesk is starting at http://127.0.0.1:3000' -ForegroundColor Green
 Write-Host 'API docs: http://127.0.0.1:8000/docs'
 Write-Host 'Demo owner: owner@orbit.demo / DemoPass123!'

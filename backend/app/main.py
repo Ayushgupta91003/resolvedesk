@@ -27,6 +27,12 @@ login_attempts = defaultdict(deque)
 
 @asynccontextmanager
 async def lifespan(app):
+    if config.AGENT_MODE not in ("demo", "llm"):
+        raise RuntimeError("AGENT_MODE must be demo or llm.")
+    if config.AGENT_MODE == "llm":
+        import os
+        if not os.getenv("OPENAI_API_KEY"):
+            raise RuntimeError("LLM mode requires OPENAI_API_KEY. Use AGENT_MODE=demo for keyless operation.")
     if config.APP_ENV == "production" and config.SEED_DEMO:
         raise RuntimeError("Disable SEED_DEMO before production startup.")
     Base.metadata.create_all(engine)

@@ -2,9 +2,11 @@ import os
 import tempfile
 from pathlib import Path
 
-TEST_DIR = Path(tempfile.mkdtemp(prefix="resolvedesk-tests-"))
+TEST_ROOT = Path(__file__).resolve().parents[1] / "data" / "tests"
+TEST_ROOT.mkdir(parents=True, exist_ok=True)
+TEST_DIR = Path(tempfile.mkdtemp(prefix="resolvedesk-tests-", dir=TEST_ROOT))
 os.environ["DATA_DIR"] = str(TEST_DIR)
-os.environ["DATABASE_URL"] = f"sqlite:///{TEST_DIR / 'test.db'}"
+os.environ["DATABASE_URL"] = f"sqlite:///{(TEST_DIR / 'test.db').as_posix()}"
 os.environ["AGENT_MODE"] = "demo"
 os.environ["SEED_DEMO"] = "true"
 os.environ["APP_ENV"] = "test"
