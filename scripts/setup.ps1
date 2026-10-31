@@ -14,7 +14,7 @@ if ($LASTEXITCODE -ne 0) {
     python -m pip --python $projectPython install pip
     if ($LASTEXITCODE -ne 0) { throw 'Could not bootstrap pip.' }
 }
-& $projectPython -m pip install -r backend/requirements.txt
+& $projectPython -m pip install -r backend/requirements.lock.txt
 if ($LASTEXITCODE -ne 0) { throw 'Python dependency installation failed.' }
 Push-Location frontend
 try {

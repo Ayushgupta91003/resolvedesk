@@ -6,9 +6,13 @@ Next.js / TypeScript · FastAPI / Python · PostgreSQL / SQLite · LangChain · 
 
 ResolveDesk is a working local-first support SaaS portfolio project. It has real sessions, organization and customer isolation, a customer portal, support inbox, knowledge sources, durable agent investigations, approval workflows, sandbox actions and an audit trail. The keyless demo runs a **real LangGraph graph with deterministic decisions**. Optional LLM mode uses a **LangChain tool-calling agent**. The default demo does not pretend to call a model.
 
+![ResolveDesk support workspace](docs/screenshots/dashboard.png)
+
+See the [approval workflow](docs/screenshots/approval-workflow.png), [customer portal](docs/screenshots/customer-orders.png) and [morning walkthrough](MORNING.md).
+
 ## Start on Windows
 
-If dependencies are already installed, double-click **START.cmd**, then open **http://127.0.0.1:3000**. Startup runs API and frontend processes in the background and writes logs under `data/`.
+If dependencies are already installed, double-click **START.cmd**, then open **http://127.0.0.1:3000**. Startup runs API and frontend processes in the background, waits until both are healthy and writes logs under `data/`. A packaged production build is used when present; use `start.ps1 -Dev` for hot reload.
 
 ```powershell
 # First-time setup if needed (Python 3.12+, Node 20.9+)
@@ -16,6 +20,10 @@ If dependencies are already installed, double-click **START.cmd**, then open **h
 .\scripts\start.ps1
 # Later
 .\scripts\stop.ps1
+# Rebuild the fast production demo after editing
+.\scripts\build.ps1
+# Or start with hot reload while developing (after stopping existing servers)
+.\scripts\start.ps1 -Dev
 ```
 
 PowerShell execution policy preventing scripts? Use `SETUP.cmd`, `START.cmd` and `STOP.cmd`; these only set the execution policy for that individual process.

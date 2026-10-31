@@ -13,8 +13,8 @@ foreach ($kind in @('api', 'web')) {
     $processInfo = Get-CimInstance Win32_Process -Filter "ProcessId = $processId" -ErrorAction SilentlyContinue
     $startedKey = $kind + '_started'
     $process = Get-Process -Id $processId -ErrorAction SilentlyContinue
-    $sameStart = $process -and $saved.$startedKey -and ([Math]::Abs(($process.StartTime.ToUniversalTime() - [DateTime]::Parse($saved.$startedKey).ToUniversalTime()).TotalSeconds) -lt 1)
-    if ($sameStart -and $processInfo -and ($processInfo.CommandLine -match 'uvicorn app.main:app|next[/\\]dist[/\\]bin[/\\]next')) {
+    $sameStart = $process -and $saved.$startedKey -and ([Math]::Abs(($process.StartTime.ToUniversalTime() - ([DateTime]$saved.$startedKey).ToUniversalTime()).TotalSeconds) -lt 1)
+    if ($sameStart -and $processInfo -and ($processInfo.CommandLine -match 'uvicorn app.main:app|next[/\\]dist[/\\]bin[/\\]next|\.next[/\\]standalone[/\\]server.js')) {
         Stop-OwnedTree $processId
     }
 }
