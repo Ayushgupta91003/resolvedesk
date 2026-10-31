@@ -1,0 +1,47 @@
+name: resolvedesk
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_USER: resolvedesk
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-resolvedesk-local-only}
+      POSTGRES_DB: resolvedesk
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U resolvedesk"]
+      interval: 5s
+      timeout: 5s
+      retries: 15
+    restart: unless-stopped
+  api:
+    build: ./backend
+    environment:
+      DATABASE_URL: postgresql+psycopg://resolvedesk:${POSTGRES_PASSWORD:-resolvedesk-local-only}@db:5432/resolvedesk
+      CHECKPOINT_URL: postgresql://resolvedesk:${POSTGRES_PASSWORD:-resolvedesk-local-only}@db:5432/resolvedesk
+      APP_ENV: development
+      SEED_DEMO: ${SEED_DEMO:-true}
+      AGENT_MODE: ${AGENT_MODE:-demo}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4.1-mini}
+      EMBEDDINGS_ENABLED: ${EMBEDDINGS_ENABLED:-false}
+      LANGSMITH_TRACING: ${LANGSMITH_TRACING:-false}
+      LANGSMITH_API_KEY: ${LANGSMITH_API_KEY:-}
+      LANGSMITH_PROJECT: resolvedesk
+      CORS_ORIGINS: http://localhost:3000,http://127.0.0.1:3000
+    ports:
+      - "127.0.0.1:8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+  web:
+    build: ./frontend
+    ports:
+      - "127.0.0.1:3000:3000"
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+volumes:
+  postgres_data:

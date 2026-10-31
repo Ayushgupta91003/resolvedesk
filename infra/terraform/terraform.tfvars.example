@@ -1,0 +1,7 @@
+region          = "ap-south-1"
+name            = "resolvedesk"
+certificate_arn = "arn:aws:acm:ap-south-1:123456789012:certificate/replace-me"
+app_origin      = "https://support.example.com"
+desired_count   = 0
+image_tag       = "v0.1.0"
+agent_mode      = "demo"
