@@ -32,3 +32,20 @@ def test_model_sources_match_its_actual_tool_results(owner, monkeypatch):
     assert len(run["proposal"]["citations"]) == 1
     assert run["proposal"]["citations"][0]["document_id"] == "doc-account"
     assert any(event["step"].startswith("search:") for event in run["events"])
+
+def test_refund_draft_uses_verified_major_units_and_sandbox_terms(owner, monkeypatch):
+    def respond(tools):
+        order = tools["lookup_customer_order"].invoke({})
+        assert order["amount_display"] == "INR 7,999.00"
+        assert "amount_cents" not in order
+        sources = tools["search_knowledge"].invoke({"search_query": "refund undelivered within 30 days"})
+        return AgentRecommendation(action="refund", reason="Eligible order", reply="799900 INR will go to your original payment method after 30 days.", source_ids=[sources[0]["id"]])
+    fake_model(monkeypatch, respond)
+    run = start(owner, "ticket-1")
+    draft = run["proposal"]["reply"]
+    assert run["proposal"]["action"] == "refund"
+    assert "INR 7,999.00" in draft and "799900" not in draft
+    assert "8 days ago" in draft
+    assert "owner approval is required" in draft
+    assert "no real payment will be moved" in draft
+    assert "original payment method" not in draft

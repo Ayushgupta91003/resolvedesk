@@ -7,6 +7,7 @@ import logging
 import sqlite3
 import threading
 import time
+from decimal import Decimal
 from contextlib import ExitStack
 from typing import TypedDict, Literal
 from sqlalchemy import select
@@ -80,6 +81,16 @@ def get_order(org_id, customer_id, reference):
 def refund_eligible(order):
     return bool(order and order["payment_status"] == "paid" and order["status"] in ("delayed", "processing", "damaged") and 0 <= order["days_since_purchase"] <= 30)
 
+def formatted_amount(order):
+    return f"{order['currency']} {Decimal(order['amount_cents']) / 100:,.2f}"
+
+def refund_draft(order):
+    return (f"We've verified your order {order['reference']} ({order['product']}). "
+            f"It was purchased {order['days_since_purchase']} days ago and qualifies for a refund "
+            f"of {formatted_amount(order)} under the 30-day refund policy. "
+            "Workspace owner approval is required. Once approved, the refund will be recorded "
+            "in our sandbox; no real payment will be moved.")
+
 def classify(state):
     with SessionLocal() as db:
         ticket = db.get(Ticket, state["ticket_id"])
@@ -139,6 +150,9 @@ def investigate(state):
         def lookup_customer_order() -> dict:
             """Read only the verified order attached to this customer ticket."""
             result = get_order(state["org_id"], customer_id, reference) or {"found": False}
+            if result.get("id"):
+                result["amount_display"] = formatted_amount(result)
+                result.pop("amount_cents")
             tool_calls.append("lookup_customer_order")
             emit(state["run_id"], f"order:{attempt}:{time.time_ns()}", "Agent checked the customer's order", {"reference": result.get("reference"), "found": bool(result.get("id"))})
             return result
@@ -201,6 +215,10 @@ def investigate(state):
         recommendation = {"action": "escalate", "reason": "No verified supporting source was cited. A human must review the request.", "reply": "A support specialist will review your request and the available policy information. No financial action has been taken."}
     if category == "billing":
         recommendation = {"action": "escalate", "reason": "Duplicate or unauthorized charges require a billing specialist.", "reply": "Your payment concern has been flagged for a billing specialist to review. No refund or other financial action has been taken."}
+    if recommendation["action"] == "refund":
+        # Financial facts and sandbox promises are rendered from verified data,
+        # never from model arithmetic or generated payment instructions.
+        recommendation["reply"] = refund_draft(order)
     proposal = {**recommendation, "category": category, "citations": evidence, "order": order, "eligible": eligible, "sandbox": True, "policy": "30-day paid, undelivered/damaged order; owner approval required"}
     emit(state["run_id"], "proposal", "Resolution prepared", {"action": proposal["action"], "reason": proposal["reason"]})
     with SessionLocal() as db:
