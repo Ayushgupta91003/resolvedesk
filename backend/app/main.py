@@ -29,10 +29,14 @@ login_attempts = defaultdict(deque)
 async def lifespan(app):
     if config.AGENT_MODE not in ("demo", "llm"):
         raise RuntimeError("AGENT_MODE must be demo or llm.")
-    if config.AGENT_MODE == "llm":
+    if config.LLM_PROVIDER not in ("openai", "ollama", "gemini"):
+        raise RuntimeError("LLM_PROVIDER must be openai, ollama or gemini.")
+    if config.AGENT_MODE == "llm" and config.LLM_PROVIDER != "ollama":
         import os
-        if not os.getenv("OPENAI_API_KEY"):
-            raise RuntimeError("LLM mode requires OPENAI_API_KEY. Use AGENT_MODE=demo for keyless operation.")
+        if not config.CLOUD_API_ENABLED:
+            raise RuntimeError("Cloud API is disabled. Confirm the project's billing tier, then set CLOUD_API_ENABLED=true before using live cloud AI.")
+        if not (os.getenv("LLM_API_KEY") or os.getenv("OPENAI_API_KEY")):
+            raise RuntimeError("This provider requires LLM_API_KEY (or OPENAI_API_KEY). Use demo mode or local Ollama without a cloud key.")
     if config.APP_ENV == "production" and config.SEED_DEMO:
         raise RuntimeError("Disable SEED_DEMO before production startup.")
     Base.metadata.create_all(engine)
@@ -128,7 +132,7 @@ def set_cookie(response, token):
 @app.get("/api/health")
 def health(db: Session = Depends(get_db)):
     db.execute(select(1))
-    return {"status": "ok", "agent_mode": config.AGENT_MODE, "sandbox": True, "demo_available": config.SEED_DEMO}
+    return {"status": "ok", "agent_mode": config.AGENT_MODE, "sandbox": True, "demo_available": config.SEED_DEMO, "database": engine.dialect.name, "llm_provider": config.LLM_PROVIDER if config.AGENT_MODE == "llm" else None, "model": config.OPENAI_MODEL if config.AGENT_MODE == "llm" else None, "retrieval": "hybrid" if config.EMBEDDINGS_ENABLED else "keyword"}
 
 @app.post("/api/auth/login")
 def login(body: Login, request: Request, response: Response, db: Session = Depends(get_db)):

@@ -1,0 +1,8 @@
+# Native Windows API/frontend with only PostgreSQL in Docker.
+# docker compose -f compose.yaml -f compose.native.yaml up -d db
+services:
+  db:
+    ports:
+      - "127.0.0.1:55432:5432"
+    mem_limit: 384m
+    cpus: 1.0

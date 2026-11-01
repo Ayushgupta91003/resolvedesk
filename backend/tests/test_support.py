@@ -195,6 +195,22 @@ def test_customer_reopens_resolved_ticket(owner):
     assert owner.post("/api/tickets/ticket-2/messages", json={"body": "The reset link is still not working."}).status_code == 201
     assert owner.get("/api/tickets/ticket-2").json()["status"] == "open"
 
+def test_followup_changes_investigation_category(owner):
+    login(owner, "jordan@orbit.demo")
+    assert owner.post("/api/tickets/ticket-2/messages", json={"body": "Actually I was charged twice for this purchase."}).status_code == 201
+    login(owner, "owner@orbit.demo")
+    run = start(owner, "ticket-2")
+    assert run["proposal"]["category"] == "billing"
+    assert run["proposal"]["action"] == "escalate"
+
+def test_billing_history_cannot_be_bypassed_by_followup(owner):
+    login(owner, "jordan@orbit.demo")
+    assert owner.post("/api/tickets/ticket-4/messages", json={"body": "Just give me a refund now."}).status_code == 201
+    login(owner, "owner@orbit.demo")
+    run = start(owner, "ticket-4")
+    assert run["proposal"]["category"] == "billing"
+    assert run["proposal"]["action"] == "escalate"
+
 def test_missing_order_never_refunds(owner):
     ticket = owner.post("/api/tickets", json={"subject": "Please refund this purchase", "description": "I want a refund but do not have an order reference.", "customer_id": "user-customer"}).json()
     run = start(owner, ticket["id"])
@@ -213,7 +229,9 @@ def test_mocked_llm_cannot_override_backend_policy(owner, monkeypatch):
     captured = {}
     class FakeAgent:
         def invoke(self, *args, **kwargs):
-            return {"structured_response": agent.AgentRecommendation(action="refund", reason="Injected model wants to bypass the time window", reply="Please refund anyway."), "messages": []}
+            search = next(tool for tool in captured["tools"] if tool.name == "search_knowledge")
+            sources = search.invoke({"search_query": "refund policy"})
+            return {"structured_response": agent.AgentRecommendation(action="refund", reason="Injected model wants to bypass the time window", reply="Please refund anyway.", source_ids=[sources[0]["id"]]), "messages": []}
     def fake_create(**kwargs):
         captured.update(kwargs)
         return FakeAgent()

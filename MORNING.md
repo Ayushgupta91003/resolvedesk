@@ -21,18 +21,26 @@ Manual owner login: `owner@orbit.demo` / `DemoPass123!`.
 - Dockerfiles, CI workflow and AWS Terraform scaffold.
 - Windows setup/build/start/stop scripts and installed local dependencies.
 
-## Verified
+## Latest local verification
+
+Docker PostgreSQL is running on localhost:55432. Existing SQLite records were migrated without deleting the original database. Gemini Free-tier testing passed in a separate synthetic-only database: native LangChain Gemini agent, LangGraph approval, pgvector semantic retrieval, two verified citations, sandbox refund and duplicate-execution prevention. See `docs/live-verification.json`.
+
+The regular app remains in demo mode until you choose to enable cloud processing. Your key is stored only in ignored `backend/.env`. Gemini Pro and API billing are separate; leave the API project on Free tier and do not enable paid billing.
+
+Keep Docker Desktop running. START.cmd now starts this project's PostgreSQL service automatically when backend/.env selects the local database on port 55432. It leaves other projects alone.
+
+## Previous verification
 
 **25 backend tests**, **86 deterministic evaluation cases**, TypeScript, production build, dependency checks and an actual browser owner → investigation → restart → approval → customer walkthrough.
 
 ## What we can do together next
 
 - Add your GitHub remote and push the existing local commits.
-- Test live LLM mode using your own API key, if you want it.
-- Run PostgreSQL containers once Docker Desktop's Linux engine is available.
+- Choose whether to enable Gemini for the regular app's tickets and knowledge.
+- Create free Render and Neon projects to host the prepared Docker deployment.
 - Review and provision AWS in your account only when ready.
 - Choose the next product feature from `docs/roadmap.md`.
 
-Cloud is not deployed, LLM calls have not been paid for/tested, and payments remain simulated. The keyless demo is deterministic and clearly labeled. Detailed evidence and remaining limits are in `docs/verification.md`.
+Cloud is not deployed. Live Gemini has been tested using Free-tier synthetic fixtures; payments remain simulated. Detailed evidence and remaining limits are in `docs/verification.md`.
 
 Use **STOP.cmd** to stop the owned servers. For editing with hot reload, stop them first, then run `scripts/start.ps1 -Dev`. After edits, `scripts/build.ps1` packages a fresh production version for START.cmd.

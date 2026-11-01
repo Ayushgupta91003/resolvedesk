@@ -1,0 +1,17 @@
+{
+  "provider": "gemini",
+  "model": "gemini-3.5-flash-lite",
+  "database": "postgresql",
+  "vector_store": "pgvector",
+  "embedding_model": "gemini-embedding-001",
+  "embedding_dimensions": 768,
+  "indexed_sample_chunks": 3,
+  "workflow": "completed",
+  "citations": 2,
+  "input_tokens": 1216,
+  "output_tokens": 256,
+  "sandbox_actions": 1,
+  "idempotency": "passed",
+  "data": "repository-defined synthetic fixtures in separate local test database",
+  "runtime_user_data_read": false
+}

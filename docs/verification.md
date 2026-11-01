@@ -4,9 +4,10 @@ Build date: 1 November 2026 (Asia/Calcutta).
 
 | Check | Result |
 |---|---|
-| FastAPI integration suite | **25 passed**, Python 3.12.6, keyless demo mode |
+| FastAPI integration suite | **33 passed** on SQLite; PostgreSQL suite also exercised in isolated resolvedesk_test |
 | Deterministic evaluation set | **86/86 passed**; category examples and refund boundary cases |
-| LangChain live adapter construction | Compiled with a placeholder key; no provider request |
+| Live Gemini agent | Free-tier synthetic-only end-to-end pass; native LangChain Gemini tool calling, 2 verified citations, approved sandbox refund, idempotent resume |
+| Semantic retrieval | Gemini embedding-001, 768 dimensions, 3 synthetic chunks in PostgreSQL pgvector; tenant-scoped query passed |
 | LLM financial-policy boundary | Mocked unsafe recommendation blocked; tenant-scoped tools checked |
 | Durable checkpoint read | Verified from a separate Python process |
 | Approved job restart recovery | Fresh process resumed persisted approval and executed exactly one action |
@@ -26,6 +27,6 @@ Build date: 1 November 2026 (Asia/Calcutta).
 
 Browser QA found and fixed a proposal panel remount during polling and a sidebar footer overflow on short screens. The production build was rerun after the fixes. Browser-test data is archived locally under `data/`; the morning demo starts with fresh seeded data. Screenshots are under `docs/screenshots/`.
 
-These checks do not establish LLM answer quality, retrieval recall, load capacity or production readiness. The evaluation suite is deterministic and is not a benchmark of a language model. Terraform provider validation/plan/apply requires Terraform and the user's AWS configuration; HCL parsing alone does not verify cloud resources or provider compatibility. AWS was not provisioned. Live LLM calls and semantic embeddings require the user's API key and remain unverified.
+These checks do not establish general LLM answer quality, retrieval recall, load capacity or production readiness. The evaluation suite is deterministic and is not a benchmark of a language model. The live smoke test establishes one synthetic refund workflow, not broad model quality. See live-verification.json for tokens, citations and isolation details. Terraform provider validation/plan/apply requires Terraform and the user's AWS configuration; HCL parsing alone does not verify cloud resources or provider compatibility. AWS was not provisioned. The combined Render Dockerfile is prepared but has not been built or deployed; Render/Neon account setup and hosted verification remain.
 
 Docker Desktop was installed, but its Linux engine was unavailable during this session. PostgreSQL/container runtime checks therefore remain pending; native SQLite integration checks passed.

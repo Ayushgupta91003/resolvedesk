@@ -1,3 +1,6 @@
+from pathlib import Path
+from dotenv import load_dotenv
+load_dotenv(Path(__file__).resolve().parents[1] / ".env")
 from sqlalchemy import select
 from .models import SessionLocal, Document
 from .knowledge import setup_vectors, index_document

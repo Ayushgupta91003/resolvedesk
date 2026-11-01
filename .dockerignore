@@ -1,0 +1,16 @@
+.git
+.venv
+**/__pycache__
+**/.pytest_cache
+frontend/node_modules
+frontend/.next
+data
+backend/data
+**/.env
+**/.env.*
+**/*.db
+**/*.db-wal
+**/*.db-shm
+**/*.log
+**/*.tfstate*
+infra/terraform/.terraform

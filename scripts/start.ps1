@@ -9,6 +9,14 @@ New-Item -ItemType Directory -Path $runtimeRoot -Force | Out-Null
 if (-not (Test-Path -LiteralPath $projectPython) -or -not (Test-Path -LiteralPath (Join-Path $frontendRoot 'node_modules/next/dist/bin/next'))) {
     throw 'Dependencies are missing. Run ./scripts/setup.ps1 first.'
 }
+$localEnvPath = Join-Path $backendRoot '.env'
+if ((Test-Path -LiteralPath $localEnvPath) -and (Select-String -LiteralPath $localEnvPath -Pattern '^DATABASE_URL=.*(?:127\.0\.0\.1|localhost):55432/resolvedesk(?:\?|$)' -Quiet)) {
+    Push-Location -LiteralPath $projectRoot
+    try {
+        docker compose -f compose.yaml -f compose.native.yaml up -d --wait db
+        if ($LASTEXITCODE -ne 0) { throw 'ResolveDesk PostgreSQL could not start. Open Docker Desktop, wait for its engine, then retry START.cmd.' }
+    } finally { Pop-Location }
+}
 foreach ($port in @(8000, 3000)) {
     if (Get-NetTCPConnection -LocalPort $port -State Listen -ErrorAction SilentlyContinue) {
         throw "Port $port is already occupied. If ResolveDesk is already running, open http://127.0.0.1:3000."

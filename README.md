@@ -10,6 +10,10 @@ ResolveDesk is a working local-first support SaaS portfolio project. It has real
 
 See the [approval workflow](docs/screenshots/approval-workflow.png), [customer portal](docs/screenshots/customer-orders.png) and [morning walkthrough](MORNING.md).
 
+Live Gemini verification now passes against a separate synthetic PostgreSQL database: native LangChain tool calling, Gemini embeddings with pgvector, verified policy citations, durable owner approval and exactly one sandbox refund after repeated resume. Evidence: [live verification](docs/live-verification.json). Cloud credentials stay outside Git; the regular local app remains in demo mode until cloud processing is enabled deliberately.
+
+The root Dockerfile and Render Blueprint prepare a combined frontend/API deployment with an external Neon database. See [free cloud setup](docs/free-cloud.md); hosted deployment has not yet been verified.
+
 ## Start on Windows
 
 If dependencies are already installed, double-click **START.cmd**, then open **http://127.0.0.1:3000**. Startup runs API and frontend processes in the background, waits until both are healthy and writes logs under `data/`. A packaged production build is used when present; use `start.ps1 -Dev` for hot reload.

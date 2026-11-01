@@ -6,7 +6,16 @@ TEST_ROOT = Path(__file__).resolve().parents[1] / "data" / "tests"
 TEST_ROOT.mkdir(parents=True, exist_ok=True)
 TEST_DIR = Path(tempfile.mkdtemp(prefix="resolvedesk-tests-", dir=TEST_ROOT))
 os.environ["DATA_DIR"] = str(TEST_DIR)
-os.environ["DATABASE_URL"] = f"sqlite:///{(TEST_DIR / 'test.db').as_posix()}"
+test_database = os.getenv("TEST_DATABASE_URL", "")
+if test_database:
+    from sqlalchemy.engine import make_url
+    if make_url(test_database).database != "resolvedesk_test":
+        raise RuntimeError("Destructive test setup only accepts the dedicated resolvedesk_test database.")
+    os.environ["DATABASE_URL"] = test_database
+    os.environ["CHECKPOINT_URL"] = os.getenv("TEST_CHECKPOINT_URL", test_database.replace("postgresql+psycopg://", "postgresql://"))
+else:
+    os.environ["DATABASE_URL"] = f"sqlite:///{(TEST_DIR / 'test.db').as_posix()}"
+    os.environ["CHECKPOINT_URL"] = ""
 os.environ["AGENT_MODE"] = "demo"
 os.environ["SEED_DEMO"] = "true"
 os.environ["APP_ENV"] = "test"
