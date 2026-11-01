@@ -25,7 +25,7 @@ Manual owner login: `owner@orbit.demo` / `DemoPass123!`.
 
 Docker PostgreSQL is running on localhost:55432. Existing SQLite records were migrated without deleting the original database. Gemini Free-tier testing passed in a separate synthetic-only database: native LangChain Gemini agent, LangGraph approval, pgvector semantic retrieval, two verified citations, sandbox refund and duplicate-execution prevention. See `docs/live-verification.json`.
 
-The regular app remains in demo mode until you choose to enable cloud processing. Your key is stored only in ignored `backend/.env`. Gemini Pro and API billing are separate; leave the API project on Free tier and do not enable paid billing.
+The regular app now uses Gemini with hybrid retrieval after your explicit opt-in. Its four policies were indexed successfully. Investigation and indexing send relevant ticket/policy text to Google. Your key is stored only in ignored `backend/.env`. Gemini Pro and API billing are separate; leave the API project on Free tier and do not enable paid billing.
 
 Keep Docker Desktop running. START.cmd now starts this project's PostgreSQL service automatically when backend/.env selects the local database on port 55432. It leaves other projects alone.
 
@@ -35,9 +35,8 @@ Keep Docker Desktop running. START.cmd now starts this project's PostgreSQL serv
 
 ## What we can do together next
 
-- Add your GitHub remote and push the existing local commits.
-- Choose whether to enable Gemini for the regular app's tickets and knowledge.
-- Create free Render and Neon projects to host the prepared Docker deployment.
+- Existing Git history is pushed to https://github.com/Ayushgupta91003/resolvedesk (public repository).
+- Hosting is deferred at your request. When ready, create free Render and Neon projects using docs/free-cloud.md.
 - Review and provision AWS in your account only when ready.
 - Choose the next product feature from `docs/roadmap.md`.
 
